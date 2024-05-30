@@ -1,26 +1,37 @@
 import { EventName, IBApi, Contract, SecType } from "@stoqey/ib";
 
-interface marketDataParams {
+export interface MarketDataParams {
   reqId: number;
   symbol: string;
   secType: string;
   exchange: string;
   currency: string;
 }
+export interface Position {
+  account: string;
+  contract: Contract;
+  position: number;
+  avgCost: number;
+}
 
 export class DataManager {
   private ib: IBApi;
   private contract: Contract;
+  private reqId: number;
   private initialCapital: number;
   private currentCapital: number;
   private stockPrice: number;
+  private prevPrice: number;
   private SMA20: number;
   private stdDev20: number;
   private lastDayClose: number;
-  private prices: CircularArray;
+  private pricesHistory: CircularArray;
+  private nextValidId: number;
+  private positions: Position[];
 
-  constructor(ib: IBApi, marketDataParams: marketDataParams, initialCapital: number) {
+  constructor(ib: IBApi, marketDataParams: MarketDataParams, initialCapital: number) {
     this.ib = ib;
+    this.reqId = marketDataParams.reqId;
     this.contract = {
       symbol: marketDataParams.symbol,
       secType: marketDataParams.secType as SecType,
@@ -29,7 +40,10 @@ export class DataManager {
     };
     this.initialCapital = initialCapital;
     this.currentCapital = initialCapital;
-    this.prices = new CircularArray(20);
+    this.pricesHistory = new CircularArray(20);
+    this.stockPrice = 0;
+    this.prevPrice = 0;
+    this.positions = [];
   }
 
   /* -------------------------------------------------------------------------- */
@@ -53,6 +67,10 @@ export class DataManager {
     return this.stockPrice;
   }
 
+  getPrevPrice(): number {
+    return this.prevPrice;
+  }
+
   getLastDayClose(): number {
     return this.lastDayClose;
   }
@@ -65,10 +83,18 @@ export class DataManager {
     return this.stdDev20;
   }
 
+  getNextValidId(): number {
+    return this.nextValidId;
+  }
+
+  getPositions(): Position[] {
+    return this.positions;
+  }
+
   updateClosePrice(price: number): void {
-    this.prices.add(price);
-    this.SMA20 = this.prices.calculateSMA();
-    this.stdDev20 = this.prices.calculateStdev();
+    this.pricesHistory.add(price);
+    this.SMA20 = this.pricesHistory.calculateSMA();
+    this.stdDev20 = this.pricesHistory.calculateStdev();
   }
 
 
@@ -95,12 +121,14 @@ export class DataManager {
 
   handleConnection(): void {
     console.log("Successfully connected to TWS");
-    this.fetchMarketData(1);
+    this.fetchMarketData(this.reqId);
+    this.ib.reqPositions(); // This will need to update whenever a new position is opened or closed
   }
 
   handlePriceUpdate(tickerId: number, field: number, price: number, attribs: any): void {
     console.log(`Price update - ${field}: ${price}`);
     if (field === 4) {
+      this.prevPrice = this.stockPrice;
       this.stockPrice = price;
     }
     // if field 9 is updated, stored in lastDayClose variable
@@ -112,6 +140,25 @@ export class DataManager {
   handleOrderStatus(orderId: number, status: string, filled: number, remaining: number, avgFillPrice: number, permId: number, parentId: number, lastFillPrice: number, clientId: number, whyHeld: string, mktCapPrice: number, lastLiquidity: number): void {
     console.log(`Order Status - Order ID: ${orderId}, Status: ${status}`);
     // Handle order status updates
+    // TODO: Implement order status handling
+  }
+
+  handleNextValidId(orderId: number): number {
+    console.log(`Next valid order ID: ${orderId}`);
+    // Handle next valid order ID
+    return this.nextValidId;  // used to keep track of order IDs
+  }
+
+  handlePositionStatus(account: string, contract: Contract, position: number, avgCost: number): void {
+    console.log(`Position - ${contract.symbol}: ${position} @ ${avgCost}`);
+    // Handle position updates
+    const index = this.positions.findIndex(p => p.contract.symbol === contract.symbol && p.account === account)
+    if (index >= 0) {
+      this.positions[index] = { account, contract, position, avgCost };
+    } else {
+      this.positions.push({ account, contract, position, avgCost });
+    }
+    // TODO: Implement position handling
   }
 
   setupListeners(): void {
@@ -119,6 +166,8 @@ export class DataManager {
     this.ib.on(EventName.connected, this.handleConnection.bind(this));
     this.ib.on(EventName.tickPrice, this.handlePriceUpdate.bind(this));
     this.ib.on(EventName.orderStatus, this.handleOrderStatus.bind(this));
+    this.ib.on(EventName.nextValidId, this.handleNextValidId.bind(this));
+    this.ib.on(EventName.position, this.handlePositionStatus.bind(this));
   }
 
   /* -------------------------------------------------------------------------- */
