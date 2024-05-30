@@ -158,7 +158,6 @@ export class DataManager {
     } else {
       this.positions.push({ account, contract, position, avgCost });
     }
-    // TODO: Implement position handling
   }
 
   setupListeners(): void {

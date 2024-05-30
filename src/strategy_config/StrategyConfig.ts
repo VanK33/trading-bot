@@ -2,20 +2,43 @@ interface IStrategy {
     evaluate(data: TradeData): TradeAction | null;
 }
 
-interface TradeAction {
+export interface TradeAction {
     type: 'buy' | 'sell' | 'hold';
-    percentage?: number;
+    percentage: number;
     triggerPrice: number;
 }
 
-interface TradeData {
+export interface TradeData {
     price: number;
     prevPrice: number;
     sma: number;
     stdev: number;
 }
 
-class buyStrategy implements IStrategy {
+export class StrategyManager {
+    private strategies: IStrategy[];
+
+    constructor() {
+        this.strategies = [];
+    }
+
+    registerStrategy(strategy: IStrategy): void {
+        this.strategies.push(strategy);
+    }
+
+    evaluateStrategies(data: TradeData): TradeAction | null {
+        for (const strategy of this.strategies) {
+            const action = strategy.evaluate(data);
+            if (action) {
+                return action;
+            }
+        }
+        return null;
+    }
+}
+
+
+export class BuyStrategy implements IStrategy {
     evaluate(data: TradeData): TradeAction | null {
         const lowerBound = data.sma - 2 * data.stdev;
 
@@ -40,7 +63,7 @@ class buyStrategy implements IStrategy {
     }
 }
 
-class sellStrategy implements IStrategy {
+export class SellStrategy implements IStrategy {
     evaluate(data: TradeData): TradeAction | null {
         const upperBound = data.sma + 2 * data.stdev;
 
@@ -74,7 +97,7 @@ class sellStrategy implements IStrategy {
     }
 }
 
-class HoldStrategy implements IStrategy {
+export class HoldStrategy implements IStrategy {
     evaluate(data: TradeData): TradeAction | null {
         const lowerBound = data.sma - 2 * data.stdev;
 
@@ -82,6 +105,7 @@ class HoldStrategy implements IStrategy {
         if (data.price < lowerBound) {
             return {
                 type: 'hold',
+                percentage: 0,
                 triggerPrice: data.price
             };
         }
