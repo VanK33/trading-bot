@@ -17,6 +17,7 @@ export class TradingEngine {
         this.strategyManager = strategyManager;
         this.stockSymbol = marketDataParams.symbol;
         this.accountID = accountID;
+        this.marketDataParams = marketDataParams;
     }
 
     /* -------------------------------------------------------------------------- */

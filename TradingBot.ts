@@ -1,0 +1,87 @@
+import { StrategyManager, BuyStrategy, SellStrategy, HoldStrategy } from "./src/strategy_config/StrategyConfig";
+import { DataManager, MarketDataParams } from "./src/data_management/DataManager";
+import { TradingEngine } from "./src/trading_engine/TradingEngine";
+import { IBApi, EventName } from "@stoqey/ib";
+/* ----- initiate the StrategyManager class and register the strategies ----- */
+
+
+/* ----- initiate the IBApi class ----- */
+export class TradingBot {
+    private ib: IBApi;
+    private dataManager: DataManager;
+    private tradingEngine: TradingEngine;
+    private strategyManager: StrategyManager;
+    private accountID: string;
+    private marketDataParams: MarketDataParams;
+
+    constructor(ib: IBApi, marketDataParams: MarketDataParams, accountID: string) {
+        this.ib = ib;
+        this.marketDataParams = marketDataParams;
+        this.accountID = accountID;
+
+        /* ------------------- initializing the DataManager class ------------------- */
+        this.dataManager = new DataManager(ib, marketDataParams, 5000);
+
+        /* ----- initiate the StrategyManager class and register the strategies ----- */
+        this.strategyManager = new StrategyManager();
+        this.strategyManager.registerStrategy(new BuyStrategy());
+        this.strategyManager.registerStrategy(new SellStrategy());
+        this.strategyManager.registerStrategy(new HoldStrategy());
+
+        /* ------------------ initializing the TradingEngine class ------------------ */
+        this.tradingEngine = new TradingEngine(this.dataManager, this.strategyManager, marketDataParams, ib, accountID);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                 General bot startup and shutdown functions                 */
+    /* -------------------------------------------------------------------------- */
+    public start(): void {
+        console.log("Starting trading bot...");
+        this.ib.connect();
+        this.setupListeners();
+    }
+
+    // General bot shutdown function
+    public stop(): void {
+        console.log("Stopping trading bot...");
+        this.disconnect();
+    }
+
+    private disconnect(): void {
+        this.ib.disconnect();
+        console.log("Disconnected from TWS");
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                               Event listeners                              */
+    /* -------------------------------------------------------------------------- */
+    private setupListeners(): void {
+        // General listeners for all interactions with the IB API
+        this.ib.on(EventName.error, this.handleError.bind(this));
+        this.ib.on(EventName.connected, this.dataManager.handleConnection.bind(this.dataManager));
+        this.ib.on(EventName.tickPrice, this.dataManager.handlePriceUpdate.bind(this.dataManager));
+        this.ib.on(EventName.orderStatus, this.dataManager.handleOrderStatus.bind(this.dataManager));
+        this.ib.on(EventName.nextValidId, this.dataManager.handleNextValidId.bind(this.dataManager));
+        this.ib.on(EventName.position, this.dataManager.handlePositionStatus.bind(this.dataManager));
+
+        // Specific listeners that handle trading data and orders
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                         Error logging and handling                         */
+    /* -------------------------------------------------------------------------- */
+
+    // Log error messages
+    logError(message: string): void {
+        console.error(`Error: ${message}`);
+    }
+
+    handleError(err: any, code: number, reqId: number): void {
+        console.error(`Error: ${err.message} - code: ${code} - reqId: ${reqId}`);
+    }
+
+    // future can import logging save module for better error handling
+
+}
+
+

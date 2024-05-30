@@ -1,4 +1,4 @@
-import { EventName, IBApi, Contract, SecType } from "@stoqey/ib";
+import { IBApi, Contract, SecType } from "@stoqey/ib";
 
 export interface MarketDataParams {
   reqId: number;
@@ -44,6 +44,10 @@ export class DataManager {
     this.stockPrice = 0;
     this.prevPrice = 0;
     this.positions = [];
+    this.SMA20 = 0;
+    this.stdDev20 = 0;
+    this.lastDayClose = 0;
+    this.nextValidId = 0;
   }
 
   /* -------------------------------------------------------------------------- */
@@ -99,23 +103,6 @@ export class DataManager {
 
 
   /* -------------------------------------------------------------------------- */
-  /*                      initializaiton and disconnection                      */
-  /* -------------------------------------------------------------------------- */
-
-  // Initialize the data manager
-  initialize(): void {
-    console.log("Initializing data manager");
-    this.ib.connect();
-    this.setupListeners();
-  }
-
-  // Disconnect from TWS
-  disconnect(): void {
-    this.ib.disconnect();
-    console.log("Disconnected from TWS");
-  }
-
-  /* -------------------------------------------------------------------------- */
   /*                               event listeners                              */
   /* -------------------------------------------------------------------------- */
 
@@ -160,14 +147,6 @@ export class DataManager {
     }
   }
 
-  setupListeners(): void {
-    this.ib.on(EventName.error, this.handleError.bind(this));
-    this.ib.on(EventName.connected, this.handleConnection.bind(this));
-    this.ib.on(EventName.tickPrice, this.handlePriceUpdate.bind(this));
-    this.ib.on(EventName.orderStatus, this.handleOrderStatus.bind(this));
-    this.ib.on(EventName.nextValidId, this.handleNextValidId.bind(this));
-    this.ib.on(EventName.position, this.handlePositionStatus.bind(this));
-  }
 
   /* -------------------------------------------------------------------------- */
   /*                            Fetching Market Data                            */
@@ -185,23 +164,6 @@ export class DataManager {
 
     this.ib.reqMktData(reqId, contract, "", false, false);
   }
-
-
-  /* -------------------------------------------------------------------------- */
-  /*                         error logging and handling                         */
-  /* -------------------------------------------------------------------------- */
-
-  // Log error messages
-  logError(message: string): void {
-    console.error(`Error: ${message}`);
-  }
-
-  handleError(err: any, code: number, reqId: number): void {
-    console.error(`Error: ${err.message} - code: ${code} - reqId: ${reqId}`);
-  }
-
-  // future can import logging save module for better error handling
-
 }
 
 
