@@ -1,6 +1,6 @@
 import { IBApi } from "@stoqey/ib";
-import { TradingBot } from "./TradingBot";
 import { MarketDataParams } from "./src/data_management/DataManager";
+import { TradingBot } from "./src/trading_bot/TradingBot";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -38,7 +38,9 @@ const marketDataConfig: MarketDataParams = {
   currency: getEnv("MARKET_CURRENCY")
 };
 
-const tradingBot = new TradingBot(ib, marketDataConfig, getEnv("IB_ACCOUNT_ID"));
+// 
+// const tradingBot = new TradingBot(ib, marketDataConfig, getEnv("IB_ACCOUNT_ID"));
 
 // Start the trading bot
-tradingBot.start();
+console.log("test if code is running...")
+// tradingBot.start();

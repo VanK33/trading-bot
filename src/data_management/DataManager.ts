@@ -124,27 +124,26 @@ export class DataManager {
     }
   }
 
-  handleOrderStatus(orderId: number, status: string, filled: number, remaining: number, avgFillPrice: number, permId: number, parentId: number, lastFillPrice: number, clientId: number, whyHeld: string, mktCapPrice: number, lastLiquidity: number): void {
-    console.log(`Order Status - Order ID: ${orderId}, Status: ${status}`);
-    // Handle order status updates
-    // TODO: Implement order status handling
-  }
 
   handleNextValidId(orderId: number): number {
     console.log(`Next valid order ID: ${orderId}`);
     // Handle next valid order ID
-    return this.nextValidId;  // used to keep track of order IDs
+    return orderId;  // used to keep track of order IDs
   }
 
-  handlePositionStatus(account: string, contract: Contract, position: number, avgCost: number): void {
+  handlePositionStatus(account: string, contract: Contract, position: number, avgCost?: number): void {
     console.log(`Position - ${contract.symbol}: ${position} @ ${avgCost}`);
     // Handle position updates
     const index = this.positions.findIndex(p => p.contract.symbol === contract.symbol && p.account === account)
     if (index >= 0) {
-      this.positions[index] = { account, contract, position, avgCost };
+      this.positions[index] = { account, contract, position, avgCost: avgCost ?? 0 };
     } else {
-      this.positions.push({ account, contract, position, avgCost });
+      this.positions.push({ account, contract, position, avgCost: avgCost ?? 0 });
     }
+  }
+
+  handlePositionEnd(): void {
+    console.log("Position updates completed");
   }
 
 
@@ -167,7 +166,7 @@ export class DataManager {
 }
 
 
-class CircularArray {
+export class CircularArray {
   private arr: number[];
   private capacity: number;
   private start: number = 0;

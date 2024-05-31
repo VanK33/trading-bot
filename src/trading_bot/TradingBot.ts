@@ -1,6 +1,6 @@
-import { StrategyManager, BuyStrategy, SellStrategy, HoldStrategy } from "./src/strategy_config/StrategyConfig";
-import { DataManager, MarketDataParams } from "./src/data_management/DataManager";
-import { TradingEngine } from "./src/trading_engine/TradingEngine";
+import { StrategyManager, BuyStrategy, SellStrategy, HoldStrategy } from "../strategy_config/StrategyConfig";
+import { DataManager, MarketDataParams } from "../data_management/DataManager";
+import { TradingEngine } from "../trading_engine/TradingEngine";
 import { IBApi, EventName } from "@stoqey/ib";
 /* ----- initiate the StrategyManager class and register the strategies ----- */
 
@@ -60,11 +60,13 @@ export class TradingBot {
         this.ib.on(EventName.error, this.handleError.bind(this));
         this.ib.on(EventName.connected, this.dataManager.handleConnection.bind(this.dataManager));
         this.ib.on(EventName.tickPrice, this.dataManager.handlePriceUpdate.bind(this.dataManager));
-        this.ib.on(EventName.orderStatus, this.dataManager.handleOrderStatus.bind(this.dataManager));
         this.ib.on(EventName.nextValidId, this.dataManager.handleNextValidId.bind(this.dataManager));
-        this.ib.on(EventName.position, this.dataManager.handlePositionStatus.bind(this.dataManager));
 
         // Specific listeners that handle trading data and orders
+        this.ib.on(EventName.position, this.dataManager.handlePositionStatus.bind(this.dataManager));
+        this.ib.on(EventName.positionEnd, this.dataManager.handlePositionEnd.bind(this.dataManager));
+        // Implementation for the future
+        // this.ib.on(EventName.updatePortfolio, this.dataManager.handlePortfolioUpdate.bind(this.dataManager));
     }
 
     /* -------------------------------------------------------------------------- */
@@ -83,5 +85,5 @@ export class TradingBot {
     // future can import logging save module for better error handling
 
 }
-
+// Path: TradingBot.ts
 

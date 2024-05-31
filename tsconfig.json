@@ -5,7 +5,8 @@
     "esModuleInterop": true,
     "moduleResolution": "node",
     "strict": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "types": ["jest"]
   },
   "include": ["src/**/*", "**/*.ts"],
   "exclude": ["node_modules"]
