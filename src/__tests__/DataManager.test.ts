@@ -9,6 +9,7 @@ jest.mock("@stoqey/ib", () => {
                 disconnect: jest.fn(),
                 reqAccountUpdates: jest.fn(),
                 reqMktData: jest.fn(),
+                reqPositions: jest.fn(),
                 on: jest.fn()
             };
         }),
@@ -16,7 +17,9 @@ jest.mock("@stoqey/ib", () => {
             connected: "connected",
             updatePortfolio: "updatePortfolio",
             updateAccountValue: "updateAccountValue",
-            nextValidId: "123"
+            nextValidId: "123",
+            reqMktData: "reqMktData",
+            reqPositions: "reqPositions",
         }
     };
 });
@@ -46,9 +49,39 @@ describe("DataManager", () => {
         expect(dataManager.getNextValidId()).toBe(orderId);
     });
 
-    test("should add or update position", () => {
+    test("should add a new position if it does not exist", () => {
+        expect(dataManager.getPositions()).toEqual([]);
         dataManager.handlePositionStatus("DU123456", testContract as Contract, 100, 120);
         expect(dataManager.getPositions()).toEqual([{ account: "DU123456", contract: testContract, position: 100, avgCost: 120 }]);
+    });
+
+
+    test("should add or update position", () => {
+        // first add contract
+        dataManager.handlePositionStatus("DU123456", testContract as Contract, 100, 120);
+        // update position
+        dataManager.handlePositionStatus("DU123456", testContract as Contract, 150, 140);
+        expect(dataManager.getPositions()).toEqual([{ account: "DU123456", contract: testContract, position: 150, avgCost: 140 }]);
+    });
+
+    test("should add multiple positions", () => {
+        dataManager.handlePositionStatus("DU123456", testContract as Contract, 100, 120);
+        dataManager.handlePositionStatus("DU123456", { symbol: "TSLA", secType: "STK", exchange: "NASDAQ", currency: "USD" } as Contract, 200, 220);
+        expect(dataManager.getPositions()).toEqual([
+            { account: "DU123456", contract: testContract, position: 100, avgCost: 120 },
+            { account: "DU123456", contract: { symbol: "TSLA", secType: "STK", exchange: "NASDAQ", currency: "USD" }, position: 200, avgCost: 220 }
+        ]);
+    });
+
+    test("should add position with 0 avgCost if not provided", () => {
+        dataManager.handlePositionStatus("DU123456", testContract as Contract, 100);
+        expect(dataManager.getPositions()).toEqual([{ account: "DU123456", contract: testContract, position: 100, avgCost: 0 }]);
+    });
+
+    test("should update position with 0 avgCost if not provided", () => {
+        dataManager.handlePositionStatus("DU123456", testContract as Contract, 100, 120);
+        dataManager.handlePositionStatus("DU123456", testContract as Contract, 150);
+        expect(dataManager.getPositions()).toEqual([{ account: "DU123456", contract: testContract, position: 150, avgCost: 0 }]);
     });
 
     test("should end position updates", () => {
@@ -60,6 +93,10 @@ describe("DataManager", () => {
     test("should fetch market data", () => {
         dataManager.fetchMarketData(1);
         expect(ibMock.reqMktData).toHaveBeenCalledWith(1, testContract, "", false, false);
+    });
+
+    test("should get current capital", () => {
+        expect(dataManager.getCurrentCapital()).toBe(1000);
     });
 
     test("should update stock price and previous price when field is 4", () => {
@@ -135,4 +172,17 @@ describe("DataManager", () => {
         expect(dataManager.get20DaySMA()).toBe(300);
         expect(dataManager.get20DayStdDev()).toBeCloseTo(158.11, 2);
     })
+
+    test("should update the console log when price update", () => {
+        console.log = jest.fn();
+        dataManager.handlePriceUpdate(1, 4, 100, {});
+        expect(console.log).toHaveBeenCalledWith("Price update - 4: 100");
+    })
+
+    test("should update the console log when connection is successful", () => {
+        console.log = jest.fn();
+        dataManager.handleConnection();
+        expect(console.log).toHaveBeenCalledWith("Successfully connected to TWS");
+    });
+
 });

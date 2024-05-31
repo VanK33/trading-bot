@@ -62,11 +62,6 @@ export class DataManager {
     return this.currentCapital;
   }
 
-  setCurrentCapital(capital: number): void {
-    this.currentCapital += capital;
-    console.log(`Current capital updated: ${this.currentCapital}`);
-  }
-
   getStockPrice(): number {
     return this.stockPrice;
   }
