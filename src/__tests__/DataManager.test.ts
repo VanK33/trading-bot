@@ -1,4 +1,4 @@
-import { CircularArray, DataManager, MarketDataParams } from "../data_management/DataManager";
+import { DataManager, MarketDataParams } from "../data_management/DataManager";
 import { Contract, IBApi } from "@stoqey/ib";
 
 jest.mock("@stoqey/ib", () => {
