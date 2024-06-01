@@ -9,8 +9,8 @@ import { IBApi, EventName } from "@stoqey/ib";
 export class TradingBot {
     private ib: IBApi;
     private dataManager: DataManager;
-    private tradingEngine: TradingEngine;
     private strategyManager: StrategyManager;
+    private tradingEngine: TradingEngine;
     private accountID: string;
     private marketDataParams: MarketDataParams;
 

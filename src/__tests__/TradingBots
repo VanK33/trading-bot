@@ -1,0 +1,61 @@
+// import { TradingBot } from "../trading_bot/TradingBot";
+// import { IBApi } from "@stoqey/ib";
+// import { DataManager, MarketDataParams } from "../data_management/DataManager";
+// import { StrategyManager, BuyStrategy, SellStrategy, HoldStrategy } from "../strategy_config/StrategyConfig";
+// import { TradingEngine } from "../trading_engine/TradingEngine";
+
+// jest.mock("@stoqey/ib", () => {
+//     return {
+//         IBApi: jest.fn().mockImplementation(() => {
+//             return {
+//                 connect: jest.fn(),
+//                 disconnect: jest.fn(),
+//                 on: jest.fn()
+//             };
+//         }),
+//         EventName: {
+//             connected: "connected",
+//             error: "error"
+//         }
+//     }
+// });
+
+// describe("TradingBot", () => {
+//     let ibMock: IBApi;
+//     let dataManager: DataManager;
+//     let tradingBot: TradingBot;
+//     let strategyManager: StrategyManager;
+//     let tradingEngine: TradingEngine;
+//     let testContract = { symbol: "AAPL", secType: "STK", exchange: "NASDAQ", currency: "USD" }
+//     let marketDataParams: MarketDataParams = { reqId: 1, ...testContract };
+//     let accountID = "DU123456";
+
+//     beforeEach(() => {
+//         ibMock = new IBApi();
+//         dataManager = new DataManager(ibMock, marketDataParams, 5000);
+//         strategyManager = new StrategyManager();
+//         tradingEngine = new TradingEngine(dataManager, strategyManager, marketDataParams, ibMock, accountID);
+//         tradingBot = new TradingBot(ibMock, marketDataParams, accountID);
+//     });
+
+//     test("should create a new TradingBot instance", () => {
+//         expect(tradingBot).toBeInstanceOf(TradingBot);
+//     });
+
+//     test("should create a new DataManager instance", () => {
+//         expect(dataManager).toBeInstanceOf(DataManager);
+//     });
+
+//     test("should create a new StrategyManager instance", () => {
+//         expect(strategyManager).toBeInstanceOf(StrategyManager);
+//     });
+
+//     test("should create a new TradingEngine instance", () => {
+//         expect(tradingEngine).toBeInstanceOf(TradingEngine);
+//     });
+
+//     test("should start the trading bot", () => {
+//         tradingBot.start();
+//         expect(ibMock.connect).toHaveBeenCalled();
+//     });
+// });

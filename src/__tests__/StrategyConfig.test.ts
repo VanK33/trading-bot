@@ -1,7 +1,6 @@
-import { IStrategy, TradeAction, TradeData, StrategyManager, HoldStrategy, BuyStrategy, SellStrategy } from "../strategy_config/StrategyConfig";
+import { TradeAction, TradeData, StrategyManager, HoldStrategy, BuyStrategy, SellStrategy } from "../strategy_config/StrategyConfig";
 
 describe('StrategyManager', () => {
-    let strategies: IStrategy[];
     let tradeData: TradeData;
     let expected: TradeAction | null;
     let strategyManager: StrategyManager = new StrategyManager();
