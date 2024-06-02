@@ -223,6 +223,7 @@ describe("TradingEngine", () => {
         expect(console.log).toHaveBeenCalledWith('Holding position');
     });
 
+    /* -------------------- tests for executeBuy specifically ------------------- */
     test('executeBuy shgould place an order correctly when no position exists', () => {
         const mockReturn = null;
         jest.spyOn(tradingEngine, 'findCurrentPosition').mockReturnValue(mockReturn);
@@ -275,10 +276,132 @@ describe("TradingEngine", () => {
         const action: TradeAction = { type: 'buy', percentage: 20, triggerPrice: 100 };
         tradingEngine.executeBuy(action);
         expect(tradingEngine.createOrder).toHaveBeenCalledWith(action, 20);
-        expect(ibMock.placeOrder).toHaveBeenCalledWith(0, testContract, tradingEngine.createOrder(action, 20));
+        expect(ibMock.placeOrder).toHaveBeenCalledWith(0, mockReturn.contract, tradingEngine.createOrder(action, 20));
+    });
+
+    test('executeBuy should not place an order when capital is not enough to buy a single', () => {
+        const mockReturn = null;
+        jest.spyOn(tradingEngine, 'findCurrentPosition').mockReturnValue(mockReturn);
+        const action: TradeAction = { type: 'buy', percentage: 20, triggerPrice: 2001 };
+        tradingEngine.executeBuy(action);
+        expect(consoleSpy).toHaveBeenCalledWith('Not enough capital to buy');
+        consoleSpy.mockRestore();
+    });
+
+    test('executeBuy should place an order when capital is just enough to buy a single', () => {
+        const mockReturn = null;
+        jest.spyOn(tradingEngine, 'findCurrentPosition').mockReturnValue(mockReturn);
+        // currentCapital = 10000, percentage = 20, triggerPrice = 2000, quantityToBuy = 1
+        const mockOrder: Order = {
+            orderId: 0,
+            clientId: 0,
+            action: "BUY" as OrderAction,
+            totalQuantity: 20,
+            orderType: OrderType.MKT,
+            tif: "DAY",
+            transmit: true,
+            outsideRth: false,
+            account: "DU123456"
+        }
+        jest.spyOn(tradingEngine, 'createOrder').mockReturnValue(mockOrder);
+        jest.spyOn(ibMock, 'placeOrder').mockImplementation();
+
+
+        const action: TradeAction = { type: 'buy', percentage: 20, triggerPrice: 2000 };
+        tradingEngine.executeBuy(action);
+        expect(tradingEngine.createOrder).toHaveBeenCalledWith(action, 1);
+        expect(ibMock.placeOrder).toHaveBeenCalledWith(0, testContract, tradingEngine.createOrder(action, 1));
+        consoleSpy.mockRestore();
+    });
+
+    test('executeBuy should place an order when capital is just enough to buy a single with slightly capital left', () => {
+        const mockReturn = null;
+        jest.spyOn(tradingEngine, 'findCurrentPosition').mockReturnValue(mockReturn);
+        // currentCapital = 10000, percentage = 20, triggerPrice = 2000, quantityToBuy = 1
+        const mockOrder: Order = {
+            orderId: 0,
+            clientId: 0,
+            action: "BUY" as OrderAction,
+            totalQuantity: 20,
+            orderType: OrderType.MKT,
+            tif: "DAY",
+            transmit: true,
+            outsideRth: false,
+            account: "DU123456"
+        }
+        jest.spyOn(tradingEngine, 'createOrder').mockReturnValue(mockOrder);
+        jest.spyOn(ibMock, 'placeOrder').mockImplementation();
+
+
+        const action: TradeAction = { type: 'buy', percentage: 20, triggerPrice: 1999 };
+        tradingEngine.executeBuy(action);
+        expect(tradingEngine.createOrder).toHaveBeenCalledWith(action, 1);
+        expect(ibMock.placeOrder).toHaveBeenCalledWith(0, testContract, tradingEngine.createOrder(action, 1));
+        consoleSpy.mockRestore();
+    });
+
+    test('executeBuy handles errors gracefully when ib.placeOrder fails', () => {
+        const mockReturn = {
+            account: "A12345",
+            contract: { symbol: "AAPL", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
+            position: 100,
+            avgCost: 150.50
+        };
+        // currentCapital = 10000, percentage = 20, triggerPrice = 100, quantityToBuy = 20
+        jest.spyOn(tradingEngine, 'findCurrentPosition').mockReturnValue(mockReturn);
+        const action: TradeAction = { type: 'buy', percentage: 20, triggerPrice: 100 };
+        const mockError = new Error('Failed to place order');
+
+        // Mock the placeOrder to throw an error
+        jest.spyOn(ibMock, 'placeOrder').mockImplementation(() => {
+            throw mockError;
+        });
+
+        // Optionally, spy on console.log if you expect to log the error
+        const consoleSpy = jest.spyOn(console, 'log');
+
+        tradingEngine.executeBuy(action);
+
+        // Check that the error was logged
+        expect(consoleSpy).toHaveBeenCalledWith('Error in placing order:', mockError);
+    });
+
+    test('executeBuy can heanlde repeated calls without side effects', () => {
+        const mockReturn = {
+            account: "A12345",
+            contract: { symbol: "AAPL", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
+            position: 100,
+            avgCost: 150.50
+        };
+
+        jest.spyOn(tradingEngine, 'findCurrentPosition').mockReturnValue(mockReturn);
+        const mockOrder: Order = {
+            orderId: 0,
+            clientId: 0,
+            action: "BUY" as OrderAction,
+            totalQuantity: 20,
+            orderType: OrderType.MKT,
+            tif: "DAY",
+            transmit: true,
+            outsideRth: false,
+            account: "DU123456"
+        }
+        jest.spyOn(tradingEngine, 'createOrder').mockReturnValue(mockOrder);
+        jest.spyOn(ibMock, 'placeOrder').mockImplementation();
+
+        const action: TradeAction = { type: 'buy', percentage: 20, triggerPrice: 100 };
+
+        tradingEngine.executeBuy(action);
+        tradingEngine.executeBuy(action);
+        tradingEngine.executeBuy(action);
+
+        expect(tradingEngine.createOrder).toHaveBeenCalledTimes(3);
+        expect(ibMock.placeOrder).toHaveBeenCalledTimes(3);
+        expect(ibMock.placeOrder).toHaveBeenCalledWith(0, mockReturn.contract, tradingEngine.createOrder(action, 20));
     });
 
 
+    /* ------------------- tests for executeSell specifically ------------------- */
     test('executeSell should place an order correctly when position does not exist ', () => {
         const mockReturn = null;
         jest.spyOn(tradingEngine, 'findCurrentPosition').mockReturnValue(mockReturn);
@@ -319,4 +442,6 @@ describe("TradingEngine", () => {
         expect(tradingEngine.createOrder).toHaveBeenCalledWith(action, 45);
         expect(ibMock.placeOrder).toHaveBeenCalledWith(0, testContract, tradingEngine.createOrder(action, 45));
     });
+
+    // TODO: Edge cases for executeSell
 });

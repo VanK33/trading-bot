@@ -107,25 +107,34 @@ export class TradingEngine {
     }
 
     executeBuy(action: TradeAction): void {
-        console.log(`Buying ${action.percentage}% at price ${action.triggerPrice}`);
         const id = this.getUniqueOrderId();
         const hasPosition = this.findCurrentPosition(this.stockSymbol);
 
         const capitalAvailable = this.dataManager.getCurrentCapital();
-        const quantityToBuy = Math.round((capitalAvailable * action.percentage) / 100 / action.triggerPrice);
+        const quantityToBuy = Math.floor((capitalAvailable * action.percentage) / 100 / action.triggerPrice);
 
-        if (hasPosition) {
-            const contract = hasPosition.contract;
-            this.ib.placeOrder(id, contract, this.createOrder(action, quantityToBuy));
-        } else {
-            this.ib.placeOrder(id, {
-                symbol: this.marketDataParams.symbol,
-                secType: this.marketDataParams.secType as SecType,
-                exchange: this.marketDataParams.exchange,
-                currency: this.marketDataParams.currency
-            }, this.createOrder(action, quantityToBuy));
+        if (quantityToBuy < 1) {
+            console.log('Not enough capital to buy');
+            return;
         }
 
+        try {
+            if (hasPosition) {
+                const contract = hasPosition.contract;
+                this.ib.placeOrder(id, contract, this.createOrder(action, quantityToBuy));
+                console.log(`Buying ${action.percentage}% at price ${action.triggerPrice}`);
+            } else {
+                this.ib.placeOrder(id, {
+                    symbol: this.marketDataParams.symbol,
+                    secType: this.marketDataParams.secType as SecType,
+                    exchange: this.marketDataParams.exchange,
+                    currency: this.marketDataParams.currency
+                }, this.createOrder(action, quantityToBuy));
+                console.log(`Buying ${action.percentage}% at price ${action.triggerPrice}`);
+            }
+        } catch (error) {
+            console.log('Error in placing order:', error);
+        }
         // execute buy order
     }
 
@@ -136,7 +145,7 @@ export class TradingEngine {
         if (hasPosition) {
             const id = this.getUniqueOrderId();
             const contract = hasPosition.contract;
-            const quantityToSell = Math.round(hasPosition.position * (action.percentage / 100));
+            const quantityToSell = Math.floor(hasPosition.position * (action.percentage / 100));
             this.ib.placeOrder(id, contract, this.createOrder(action, quantityToSell));
         } else {
             console.log('No position to sell');
