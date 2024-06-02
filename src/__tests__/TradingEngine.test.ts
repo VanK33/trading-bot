@@ -15,7 +15,6 @@ describe("TradingEngine", () => {
     let testContract = { symbol: "AAPL", secType: "STK", exchange: "NASDAQ", currency: "USD" }
     let mockData: TradeData;
     let consoleSpy: jest.SpyInstance;
-    let positions: Position[];
 
     beforeEach(() => {
         ibMock = new IBApi();
@@ -95,7 +94,33 @@ describe("TradingEngine", () => {
     });
 
     test("should get positions", () => {
-        expect(tradingEngine.getPositions()).toEqual(positions);
+        const expectedPositions: Position[] = [
+            {
+                account: "A12345",
+                contract: { symbol: "AAPL", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
+                position: 100,
+                avgCost: 150.50
+            },
+            {
+                account: "A12345",
+                contract: { symbol: "GOOGL", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
+                position: 200,
+                avgCost: 1220.75
+            },
+            {
+                account: "B67890",
+                contract: { symbol: "AMZN", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
+                position: 50,
+                avgCost: 3100.00
+            },
+            {
+                account: "B67890",
+                contract: { symbol: "TSLA", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
+                position: 150,
+                avgCost: 720.40
+            }
+        ];
+        expect(tradingEngine.getPositions()).toEqual(expectedPositions);
     });
 
     test("should get unique order ID", () => {
@@ -523,5 +548,6 @@ describe("TradingEngine", () => {
         tradingEngine.executeSell(action);
         expect(tradingEngine.createOrder).toHaveBeenCalledWith(action, 100);
         expect(ibMock.placeOrder).toHaveBeenCalledWith(0, testContract, tradingEngine.createOrder(action, 100));
+
     });
 });
