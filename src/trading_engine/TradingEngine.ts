@@ -142,13 +142,22 @@ export class TradingEngine {
         console.log(`Selling ${action.percentage}% at price ${action.triggerPrice}`);
         const hasPosition = this.findCurrentPosition(this.stockSymbol);
 
-        if (hasPosition) {
-            const id = this.getUniqueOrderId();
-            const contract = hasPosition.contract;
-            const quantityToSell = Math.floor(hasPosition.position * (action.percentage / 100));
-            this.ib.placeOrder(id, contract, this.createOrder(action, quantityToSell));
-        } else {
-            console.log('No position to sell');
+        try {
+            if (hasPosition) {
+                const id = this.getUniqueOrderId();
+                const contract = hasPosition.contract;
+                const quantityToSell = Math.floor(hasPosition.position * (action.percentage / 100));
+
+                if (quantityToSell < 1) {
+                    console.log('Not enough quantity to sell');
+                    return;
+                }
+                this.ib.placeOrder(id, contract, this.createOrder(action, quantityToSell));
+            } else {
+                console.log('No position to sell');
+            }
+        } catch (error) {
+            console.log('Error in placing order:', error);
         }
     }
 }   
