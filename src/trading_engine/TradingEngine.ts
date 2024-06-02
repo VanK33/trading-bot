@@ -68,8 +68,8 @@ export class TradingEngine {
             clientId: 0,
             action: action.type.toUpperCase() as OrderAction,
             totalQuantity: action.type.toUpperCase() === "BUY"
-                ? Math.round((this.dataManager.getCurrentCapital() * action.percentage) / 100 / action.triggerPrice)
-                : Math.round(currentPosition * (action.percentage / 100)),
+                ? Math.floor((this.dataManager.getCurrentCapital() * action.percentage) / 100 / action.triggerPrice)
+                : Math.floor(currentPosition * (action.percentage / 100)),
             orderType: OrderType.MKT,
             tif: TimeInForce.DAY,
             transmit: true,
@@ -93,20 +93,16 @@ export class TradingEngine {
     }
 
     executeTrade(action: TradeAction): void {
-        if (action) {
-            switch (action.type) {
-                case 'buy':
-                    this.executeBuy(action);
-                    break;
-                case 'sell':
-                    this.executeSell(action);
-                    break;
-                case 'hold':
-                    console.log('Holding position');
-                    break;
-            }
-        } else {
-            console.log("No action recommended by strategies")
+        switch (action.type) {
+            case 'buy':
+                this.executeBuy(action);
+                break;
+            case 'sell':
+                this.executeSell(action);
+                break;
+            case 'hold':
+                console.log('Holding position');
+                break;
         }
     }
 
