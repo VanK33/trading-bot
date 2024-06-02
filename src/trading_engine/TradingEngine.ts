@@ -132,10 +132,12 @@ export class TradingEngine {
     executeSell(action: TradeAction): void {
         console.log(`Selling ${action.percentage}% at price ${action.triggerPrice}`);
         const hasPosition = this.findCurrentPosition(this.stockSymbol);
+
         if (hasPosition) {
             const id = this.getUniqueOrderId();
             const contract = hasPosition.contract;
-            this.ib.placeOrder(id, contract, this.createOrder(action, hasPosition.position));
+            const quantityToSell = Math.round(hasPosition.position * (action.percentage / 100));
+            this.ib.placeOrder(id, contract, this.createOrder(action, quantityToSell));
         } else {
             console.log('No position to sell');
         }

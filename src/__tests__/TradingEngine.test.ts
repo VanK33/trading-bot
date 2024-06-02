@@ -1,8 +1,9 @@
-import { IBApi, SecType } from '@stoqey/ib';
+import { IBApi, Order, OrderAction, OrderType, SecType } from '@stoqey/ib';
 import { DataManager, Position, MarketDataParams } from '../data_management/DataManager';
 import { TradeData, StrategyManager, TradeAction } from '../strategy_config/StrategyConfig';
 import { TradingEngine } from '../trading_engine/TradingEngine';
-import { after } from 'node:test';
+import { after, mock } from 'node:test';
+import { create } from 'node:domain';
 
 
 
@@ -222,4 +223,100 @@ describe("TradingEngine", () => {
         expect(console.log).toHaveBeenCalledWith('Holding position');
     });
 
+    test('executeBuy shgould place an order correctly when no position exists', () => {
+        const mockReturn = null;
+        jest.spyOn(tradingEngine, 'findCurrentPosition').mockReturnValue(mockReturn);
+        // currentCapital = 10000, percentage = 20, triggerPrice = 100, quantityToBuy = 20
+        const mockOrder: Order = {
+            orderId: 0,
+            clientId: 0,
+            action: "BUY" as OrderAction,
+            totalQuantity: 20,
+            orderType: OrderType.MKT,
+            tif: "DAY",
+            transmit: true,
+            outsideRth: false,
+            account: "DU123456"
+        }
+        jest.spyOn(tradingEngine, 'createOrder').mockReturnValue(mockOrder);
+        jest.spyOn(ibMock, 'placeOrder').mockImplementation();
+
+
+        const action: TradeAction = { type: 'buy', percentage: 20, triggerPrice: 100 };
+        tradingEngine.executeBuy(action);
+        expect(tradingEngine.createOrder).toHaveBeenCalledWith(action, 20);
+        expect(ibMock.placeOrder).toHaveBeenCalledWith(0, testContract, tradingEngine.createOrder(action, 20));
+    });
+
+    test('executeBuy shgould place an order correctly when position exists', () => {
+        const mockReturn = {
+            account: "A12345",
+            contract: { symbol: "AAPL", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
+            position: 100,
+            avgCost: 150.50
+        };
+        // currentCapital = 10000, percentage = 20, triggerPrice = 100, quantityToBuy = 20
+        jest.spyOn(tradingEngine, 'findCurrentPosition').mockReturnValue(mockReturn);
+
+        const mockOrder: Order = {
+            orderId: 0,
+            clientId: 0,
+            action: "BUY" as OrderAction,
+            totalQuantity: 20,
+            orderType: OrderType.MKT,
+            tif: "DAY",
+            transmit: true,
+            outsideRth: false,
+            account: "DU123456"
+        }
+        jest.spyOn(tradingEngine, 'createOrder').mockReturnValue(mockOrder);
+        jest.spyOn(ibMock, 'placeOrder').mockImplementation();
+
+        const action: TradeAction = { type: 'buy', percentage: 20, triggerPrice: 100 };
+        tradingEngine.executeBuy(action);
+        expect(tradingEngine.createOrder).toHaveBeenCalledWith(action, 20);
+        expect(ibMock.placeOrder).toHaveBeenCalledWith(0, testContract, tradingEngine.createOrder(action, 20));
+    });
+
+
+    test('executeSell should place an order correctly when position does not exist ', () => {
+        const mockReturn = null;
+        jest.spyOn(tradingEngine, 'findCurrentPosition').mockReturnValue(mockReturn);
+
+        const action: TradeAction = { type: 'sell', percentage: 45, triggerPrice: 100 };
+        tradingEngine.executeSell(action);
+
+        expect(consoleSpy).toHaveBeenCalledWith('No position to sell')
+        consoleSpy.mockRestore();
+    });
+
+    test('executeSell should place an order correctly when position exists ', () => {
+        const mockReturn = {
+            account: "A12345",
+            contract: { symbol: "AAPL", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
+            position: 100,
+            avgCost: 150.50
+        };
+        jest.spyOn(tradingEngine, 'findCurrentPosition').mockReturnValue(mockReturn);
+        // currentPosition = 100, percentage = 45, quantityToSell = 45
+        const mockOrder: Order = {
+            orderId: 0,
+            clientId: 0,
+            action: "SELL" as OrderAction,
+            totalQuantity: 45,
+            orderType: OrderType.MKT,
+            tif: "DAY",
+            transmit: true,
+            outsideRth: false,
+            account: "DU123456"
+        };
+
+        jest.spyOn(tradingEngine, 'createOrder').mockReturnValue(mockOrder);
+        jest.spyOn(ibMock, 'placeOrder').mockImplementation();
+
+        const action: TradeAction = { type: 'sell', percentage: 45, triggerPrice: 100 };
+        tradingEngine.executeSell(action);
+        expect(tradingEngine.createOrder).toHaveBeenCalledWith(action, 45);
+        expect(ibMock.placeOrder).toHaveBeenCalledWith(0, testContract, tradingEngine.createOrder(action, 45));
+    });
 });
