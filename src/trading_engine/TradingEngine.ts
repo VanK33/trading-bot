@@ -52,9 +52,9 @@ export class TradingEngine {
     /*            checking and find the stock in the current positions            */
     /* -------------------------------------------------------------------------- */
 
-    findCurrentPosition(symbol: string): Position | null {
+    findCurrentPosition(symbol: string, account: string): Position | null {
         const positions = this.dataManager.getPositions();
-        const position = positions.find(p => p.contract.symbol === symbol && p.position !== 0);
+        const position = positions.find(p => p.contract.symbol === symbol && p.account === account && p.position !== 0);
         return position ? position : null;
     }
 
@@ -108,7 +108,7 @@ export class TradingEngine {
 
     executeBuy(action: TradeAction): void {
         const id = this.getUniqueOrderId();
-        const hasPosition = this.findCurrentPosition(this.stockSymbol);
+        const hasPosition = this.findCurrentPosition(this.stockSymbol, this.accountID);
 
         const capitalAvailable = this.dataManager.getCurrentCapital();
         const quantityToBuy = Math.floor((capitalAvailable * action.percentage) / 100 / action.triggerPrice);
@@ -140,7 +140,7 @@ export class TradingEngine {
 
     executeSell(action: TradeAction): void {
         console.log(`Selling ${action.percentage}% at price ${action.triggerPrice}`);
-        const hasPosition = this.findCurrentPosition(this.stockSymbol);
+        const hasPosition = this.findCurrentPosition(this.stockSymbol, this.accountID);
 
         try {
             if (hasPosition) {
