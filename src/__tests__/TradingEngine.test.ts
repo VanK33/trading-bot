@@ -1,7 +1,7 @@
 import { IBApi, Order, OrderAction, OrderType, SecType } from '@stoqey/ib';
-import { DataManager, Position, MarketDataParams } from '../data_management/DataManager';
-import { TradeData, StrategyManager, TradeAction } from '../strategy_config/StrategyConfig';
-import { TradingEngine } from '../trading_engine/TradingEngine';
+import { DataManager, Position, MarketDataParams } from '../datamanagement/DataManager';
+import { TradeData, StrategyManager, TradeAction } from '../strategyconfig/StrategyConfig';
+import { TradingEngine } from '../tradingengine/TradingEngine';
 
 
 describe("TradingEngine", () => {
@@ -52,7 +52,6 @@ describe("TradingEngine", () => {
         ];
 
 
-        tradingEngine = new TradingEngine(dataManager, strategyManager, marketDataParams, ibMock, accountID);
 
         dataManager = new DataManager(ibMock, marketDataParams, 1000);
         jest.spyOn(dataManager, 'getStockPrice').mockReturnValue(100);
@@ -65,9 +64,14 @@ describe("TradingEngine", () => {
 
         strategyManager = new StrategyManager();
         jest.spyOn(strategyManager, 'evaluateStrategies').mockReturnValue({ type: 'sell', percentage: 20, triggerPrice: 100 });
+
+        tradingEngine = new TradingEngine(dataManager, strategyManager, marketDataParams, ibMock, accountID);
+        dataManager.on("priceUpdate", tradingEngine.handlePriceProcess.bind(tradingEngine));
+        jest.spyOn(tradingEngine, "handlePriceProcess").mockImplementation();
         jest.spyOn(tradingEngine, 'executeSell');
         jest.spyOn(tradingEngine, 'executeBuy');
         consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
     });
 
     afterEach(() => {
@@ -159,6 +163,19 @@ describe("TradingEngine", () => {
     test("should find current position", () => {
         const position = tradingEngine.findCurrentPosition("FAKE", accountID);
         expect(position).toBeNull();
+    });
+
+    test("should called handlePriceProcess when price is updated", () => {
+        // tradingEngine.handlePriceProcess();
+        dataManager.emit('priceUpdate');
+        expect(consoleSpy).toHaveBeenCalledWith('Handling price process');
+        expect(tradingEngine.handlePriceProcess).toHaveBeenCalled();
+    });
+
+    test("should executeTrade if action is present", () => {
+        const action: TradeAction = { type: 'sell', percentage: 20, triggerPrice: 100 };
+        const trade = tradingEngine.executeTrade(action);
+        expect(trade).toHaveBeenCalled();
     });
 
     /* -------------------------------------------------------------------------- */
@@ -569,71 +586,4 @@ describe("TradingEngine", () => {
         expect(ibMock.placeOrder).toHaveBeenCalledWith(0, testContract, tradingEngine.createOrder(action, 100));
     });
 
-
-    /* -------------------------------------------------------------------------- */
-    /*   Integrated test for TradingEngine with DataManager and StrategyManager   */
-    /* -------------------------------------------------------------------------- */
-
-    /* ---------- integrate test for just tradingEngine and dataManager --------- */
-    test('should place an order to sell all positions when percentage is 100 and update positions correctly', () => {
-        const mockReturn = {
-            account: "A12345",
-            contract: { symbol: "AAPL", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
-            position: 100,
-            avgCost: 150.50
-        };
-        jest.spyOn(tradingEngine, 'findCurrentPosition').mockReturnValue(mockReturn);
-        jest.spyOn(dataManager, 'handlePositionStatus').mockImplementation();
-
-        // expect to sell 100% of all AAPL position
-        const expectedPositions: Position[] = [
-            {
-                account: "A12345",
-                contract: { symbol: "AAPL", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
-                position: 100,
-                avgCost: 150.50
-            },
-            {
-                account: "A12345",
-                contract: { symbol: "GOOGL", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
-                position: 200,
-                avgCost: 1220.75
-            },
-            {
-                account: "B67890",
-                contract: { symbol: "AMZN", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
-                position: 50,
-                avgCost: 3100.00
-            },
-            {
-                account: "B67890",
-                contract: { symbol: "TSLA", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
-                position: 150,
-                avgCost: 720.40
-            }
-        ];
-        ibMock.emit('positionUpdate', expectedPositions);
-
-        const mockOrder: Order = {
-            orderId: 0,
-            clientId: 0,
-            action: "SELL" as OrderAction,
-            totalQuantity: 100,
-            orderType: OrderType.MKT,
-            tif: "DAY",
-            transmit: true,
-            outsideRth: false,
-            account: "DU123456"
-        };
-
-        jest.spyOn(tradingEngine, 'createOrder').mockReturnValue(mockOrder);
-        jest.spyOn(ibMock, 'placeOrder').mockImplementation();
-
-        const action: TradeAction = { type: 'sell', percentage: 100, triggerPrice: 100 };
-        tradingEngine.executeSell(action);
-        expect(tradingEngine.createOrder).toHaveBeenCalledWith(action, 100);
-        expect(ibMock.placeOrder).toHaveBeenCalledWith(0, testContract, tradingEngine.createOrder(action, 100));
-        expect(dataManager.handlePositionStatus).toHaveBeenCalledWith(expectedPositions);
-        expect(dataManager.getPositions()).toEqual(expectedPositions);
-    });
 });

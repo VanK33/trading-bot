@@ -1,4 +1,4 @@
-import { TradeAction, TradeData, StrategyManager, HoldStrategy, BuyStrategy, SellStrategy } from "../strategy_config/StrategyConfig";
+import { TradeAction, TradeData, StrategyManager, HoldStrategy, BuyStrategy, SellStrategy } from "../strategyconfig/StrategyConfig";
 
 describe('StrategyManager', () => {
     let tradeData: TradeData;

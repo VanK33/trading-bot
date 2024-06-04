@@ -1,4 +1,5 @@
 import { IBApi, Contract, SecType } from "@stoqey/ib";
+import { EventEmitter } from "events";
 
 export interface MarketDataParams {
   reqId: number;
@@ -14,7 +15,7 @@ export interface Position {
   avgCost: number;
 }
 
-export class DataManager {
+export class DataManager extends EventEmitter {
   private ib: IBApi;
   private contract: Contract;
   private reqId: number;
@@ -30,6 +31,7 @@ export class DataManager {
   private positions: Position[];
 
   constructor(ib: IBApi, marketDataParams: MarketDataParams, initialCapital: number) {
+    super();
     this.ib = ib;
     this.reqId = marketDataParams.reqId;
     this.contract = {
@@ -109,9 +111,12 @@ export class DataManager {
 
   handlePriceUpdate(tickerId: number, field: number, price: number, attribs: any): void {
     console.log(`Price update - ${field}: ${price}`);
-    if (field === 4) {
+    if (field === 2) {
       this.prevPrice = this.stockPrice;
       this.stockPrice = price;
+      console.log('Emitting priceUpdate');
+      this.emit('priceUpdate');
+      console.log('priceUpdate emitted');
     }
     // if field 9 is updated, stored in lastDayClose variable
     if (field === 9) {

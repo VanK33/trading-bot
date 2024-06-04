@@ -1,6 +1,6 @@
-import { StrategyManager, BuyStrategy, SellStrategy, HoldStrategy } from "../strategy_config/StrategyConfig";
-import { DataManager, MarketDataParams } from "../data_management/DataManager";
-import { TradingEngine } from "../trading_engine/TradingEngine";
+import { StrategyManager, BuyStrategy, SellStrategy, HoldStrategy } from "../strategyconfig/StrategyConfig.js";
+import { DataManager, MarketDataParams } from "../datamanagement/DataManager.js";
+import { TradingEngine } from "../tradingengine/TradingEngine.js"
 import { IBApi, EventName } from "@stoqey/ib";
 /* ----- initiate the StrategyManager class and register the strategies ----- */
 
@@ -56,7 +56,7 @@ export class TradingBot {
     /*                               Event listeners                              */
     /* -------------------------------------------------------------------------- */
     private setupListeners(): void {
-        // General listeners for all interactions with the IB API
+        /* --------- General listeners for all interactions with the IB API --------- */
         this.ib.on(EventName.error, this.handleError.bind(this));
         this.ib.on(EventName.connected, this.dataManager.handleConnection.bind(this.dataManager));
         this.ib.on(EventName.tickPrice, this.dataManager.handlePriceUpdate.bind(this.dataManager));
@@ -66,6 +66,7 @@ export class TradingBot {
         this.ib.on(EventName.position, this.dataManager.handlePositionStatus.bind(this.dataManager));
         this.ib.on(EventName.positionEnd, this.dataManager.handlePositionEnd.bind(this.dataManager));
         // Implementation for the future
+        this.dataManager.on("priceUpdate", this.tradingEngine.handlePriceProcess.bind(this.tradingEngine));
         // this.ib.on(EventName.updatePortfolio, this.dataManager.handlePortfolioUpdate.bind(this.dataManager));
     }
 

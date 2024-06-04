@@ -1,6 +1,6 @@
 import { IBApi, Order, OrderAction, OrderType, TimeInForce, SecType } from '@stoqey/ib';
-import { DataManager, Position, MarketDataParams } from '../data_management/DataManager';
-import { TradeData, StrategyManager, TradeAction } from '../strategy_config/StrategyConfig';
+import { DataManager, Position, MarketDataParams } from '../datamanagement/DataManager.js';
+import { TradeData, StrategyManager, TradeAction } from '../strategyconfig/StrategyConfig.js';
 
 
 export class TradingEngine {
@@ -46,6 +46,18 @@ export class TradingEngine {
 
     getUniqueOrderId(): number {
         return this.dataManager.getNextValidId();
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                    initiaiate trading with updated price                   */
+    /* -------------------------------------------------------------------------- */
+
+    handlePriceProcess(): void {
+        console.log('Handling price process')
+        const action = this.evaluateStrategies();
+        if (action) {
+            this.executeTrade(action);
+        }
     }
 
     /* -------------------------------------------------------------------------- */

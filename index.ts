@@ -1,6 +1,6 @@
 import { IBApi } from "@stoqey/ib";
-import { MarketDataParams } from "./src/data_management/DataManager";
-import { TradingBot } from "./src/trading_bot/TradingBot";
+import { MarketDataParams } from "./src/datamanagement/DataManager.js";
+import { TradingBot } from "./src/tradingbot/TradingBot.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -38,9 +38,22 @@ const marketDataConfig: MarketDataParams = {
   currency: getEnv("MARKET_CURRENCY")
 };
 
-// 
-// const tradingBot = new TradingBot(ib, marketDataConfig, getEnv("IB_ACCOUNT_ID"));
+console.log(marketDataConfig);
 
-// Start the trading bot
-console.log("test if code is running...")
-// tradingBot.start();
+const tradingBot = new TradingBot(ib, marketDataConfig, getEnv("IB_ACCOUNT_ID"));
+
+try {
+  // Start the trading bot
+  tradingBot.start();
+} catch (error) {
+  console.log("error intializing trading bot", error)
+}
+
+
+process.on('SIGINT', () => {
+  console.log('CTRL+C detected. Shutting down gracefully.');
+  tradingBot.stop();
+  setTimeout(() => {
+    process.exit(0);
+  }, 1000);  // 给异步操作一些时间来完成
+});

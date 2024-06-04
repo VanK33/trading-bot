@@ -1,4 +1,4 @@
-import { DataManager, MarketDataParams } from "../data_management/DataManager";
+import { DataManager, MarketDataParams } from "../datamanagement/DataManager";
 import { Contract, IBApi } from "@stoqey/ib";
 
 jest.mock("@stoqey/ib", () => {
@@ -99,29 +99,29 @@ describe("DataManager", () => {
         expect(dataManager.getCurrentCapital()).toBe(1000);
     });
 
-    test("should update stock price and previous price when field is 4", () => {
-        dataManager.handlePriceUpdate(1, 4, 100, {});
+    test("should update stock price and previous price when field is 2", () => {
+        dataManager.handlePriceUpdate(1, 2, 100, {});
         expect(dataManager.getStockPrice()).toBe(100);
         expect(dataManager.getPrevPrice()).toBe(0);
     });
 
-    test("should update previous price when field is 4", () => {
-        dataManager.handlePriceUpdate(1, 4, 100, {});
+    test("should update previous price when field is 2", () => {
+        dataManager.handlePriceUpdate(1, 2, 100, {});
         expect(dataManager.getPrevPrice()).toBe(0);
         expect(dataManager.getStockPrice()).toBe(100);
         // Update price again to check for getting previous price
-        dataManager.handlePriceUpdate(1, 4, 105, {});
+        dataManager.handlePriceUpdate(1, 2, 105, {});
         expect(dataManager.getPrevPrice()).toBe(100);
         expect(dataManager.getStockPrice()).toBe(105);
     });
 
-    test("should not update previous price when field is not 4", () => {
+    test("should not update previous price when field is not 2", () => {
 
-        dataManager.handlePriceUpdate(1, 3, 100, {});
+        dataManager.handlePriceUpdate(1, 1, 100, {});
         expect(dataManager.getPrevPrice()).toBe(0);
         expect(dataManager.getStockPrice()).toBe(0);
 
-        dataManager.handlePriceUpdate(1, 5, 100, {});
+        dataManager.handlePriceUpdate(1, 3, 100, {});
         expect(dataManager.getPrevPrice()).toBe(0);
         expect(dataManager.getStockPrice()).toBe(0);
 

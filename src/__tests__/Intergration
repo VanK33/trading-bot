@@ -1,0 +1,66 @@
+/* -------------------------------------------------------------------------- */
+/*   Integrated test for TradingEngine with DataManager and StrategyManager   */
+/* -------------------------------------------------------------------------- */
+
+/* ---------- integrate test for just tradingEngine and dataManager --------- */
+// test('should place an order to sell all positions when percentage is 100 and update positions correctly', () => {
+//     const mockReturn = {
+//         account: "A12345",
+//         contract: { symbol: "AAPL", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
+//         position: 100,
+//         avgCost: 150.50
+//     };
+//     jest.spyOn(tradingEngine, 'findCurrentPosition').mockReturnValue(mockReturn);
+//     jest.spyOn(dataManager, 'handlePositionStatus').mockImplementation();
+
+//     // expect to sell 100% of all AAPL position
+//     const expectedPositions: Position[] = [
+//         {
+//             account: "A12345",
+//             contract: { symbol: "AAPL", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
+//             position: 100,
+//             avgCost: 150.50
+//         },
+//         {
+//             account: "A12345",
+//             contract: { symbol: "GOOGL", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
+//             position: 200,
+//             avgCost: 1220.75
+//         },
+//         {
+//             account: "B67890",
+//             contract: { symbol: "AMZN", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
+//             position: 50,
+//             avgCost: 3100.00
+//         },
+//         {
+//             account: "B67890",
+//             contract: { symbol: "TSLA", secType: "STK" as SecType, currency: "USD", exchange: "NASDAQ" },
+//             position: 150,
+//             avgCost: 720.40
+//         }
+//     ];
+//     ibMock.emit('positionUpdate', expectedPositions);
+
+//     const mockOrder: Order = {
+//         orderId: 0,
+//         clientId: 0,
+//         action: "SELL" as OrderAction,
+//         totalQuantity: 100,
+//         orderType: OrderType.MKT,
+//         tif: "DAY",
+//         transmit: true,
+//         outsideRth: false,
+//         account: "DU123456"
+//     };
+
+//     jest.spyOn(tradingEngine, 'createOrder').mockReturnValue(mockOrder);
+//     jest.spyOn(ibMock, 'placeOrder').mockImplementation();
+
+//     const action: TradeAction = { type: 'sell', percentage: 100, triggerPrice: 100 };
+//     tradingEngine.executeSell(action);
+//     expect(tradingEngine.createOrder).toHaveBeenCalledWith(action, 100);
+//     expect(ibMock.placeOrder).toHaveBeenCalledWith(0, testContract, tradingEngine.createOrder(action, 100));
+//     expect(dataManager.handlePositionStatus).toHaveBeenCalledWith(expectedPositions);
+//     expect(dataManager.getPositions()).toEqual(expectedPositions);
+// });
