@@ -66,8 +66,6 @@ describe("TradingEngine", () => {
         jest.spyOn(strategyManager, 'evaluateStrategies').mockReturnValue({ type: 'sell', percentage: 20, triggerPrice: 100 });
 
         tradingEngine = new TradingEngine(dataManager, strategyManager, marketDataParams, ibMock, accountID);
-        dataManager.on("priceUpdate", tradingEngine.handlePriceProcess.bind(tradingEngine));
-        jest.spyOn(tradingEngine, "handlePriceProcess").mockImplementation();
         jest.spyOn(tradingEngine, 'executeSell');
         jest.spyOn(tradingEngine, 'executeBuy');
         consoleSpy = jest.spyOn(console, 'log').mockImplementation();
@@ -76,6 +74,7 @@ describe("TradingEngine", () => {
 
     afterEach(() => {
         consoleSpy.mockRestore();
+        jest.restoreAllMocks();
     });
 
     test("should create a new DataManager instance", () => {
@@ -166,16 +165,20 @@ describe("TradingEngine", () => {
     });
 
     test("should called handlePriceProcess when price is updated", () => {
-        // tradingEngine.handlePriceProcess();
+        jest.spyOn(tradingEngine, 'handlePriceProcess').mockImplementation();
+        dataManager.on("priceUpdate", tradingEngine.handlePriceProcess.bind(tradingEngine));
         dataManager.emit('priceUpdate');
-        expect(consoleSpy).toHaveBeenCalledWith('Handling price process');
         expect(tradingEngine.handlePriceProcess).toHaveBeenCalled();
     });
 
     test("should executeTrade if action is present", () => {
-        const action: TradeAction = { type: 'sell', percentage: 20, triggerPrice: 100 };
-        const trade = tradingEngine.executeTrade(action);
-        expect(trade).toHaveBeenCalled();
+        tradingEngine.handlePriceProcess();
+
+        const executeTradeSpy = jest.spyOn(tradingEngine, 'executeTrade').mockImplementation();
+        tradingEngine.handlePriceProcess();
+
+        expect(consoleSpy).toHaveBeenCalledWith("Handling price process");
+        expect(tradingEngine.executeTrade).toHaveBeenCalledWith({ type: 'sell', percentage: 20, triggerPrice: 100 });
     });
 
     /* -------------------------------------------------------------------------- */

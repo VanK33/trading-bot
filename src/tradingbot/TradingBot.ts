@@ -37,8 +37,8 @@ export class TradingBot {
     /* -------------------------------------------------------------------------- */
     public start(): void {
         console.log("Starting trading bot...");
-        this.ib.connect();
         this.setupListeners();
+        this.ib.connect();
     }
 
     // General bot shutdown function
