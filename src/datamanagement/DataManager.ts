@@ -117,9 +117,10 @@ export class DataManager extends EventEmitter {
       this.stockPrice = price;
       this.emit('priceUpdate');
     }
-    // if field 9 is updated, stored in lastDayClose variable
+    // if field 9 is updated, stored in lastDayClose variable // guaranteed to update when the program first initializes
     if (field === 9) {
       this.lastDayClose = price;
+      this.updateClosePrice(price);
     }
   }
 

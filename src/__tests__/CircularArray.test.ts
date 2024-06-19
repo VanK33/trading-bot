@@ -1,4 +1,4 @@
-import { CircularArray } from "../datamanagement/DataManager";
+import { CircularArray } from "../utilities/CircularArray";
 
 describe("CircularArray", () => {
     let cArray: CircularArray;
