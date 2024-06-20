@@ -43,7 +43,7 @@ export class DataManager extends EventEmitter {
     };
     this.initialCapital = initialCapital;
     this.currentCapital = initialCapital;
-    this.pricesHistory = new CircularArray(20);
+    this.pricesHistory = CircularArray.fromFile(20, "./data/", `${marketDataParams.symbol}.txt`)
     this.stockPrice = 0;
     this.prevPrice = 0;
     this.positions = [];

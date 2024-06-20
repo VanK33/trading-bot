@@ -1,11 +1,9 @@
-import exp from "constants";
 import { CircularArray } from "../utilities/CircularArray";
 import fs from "fs";
 
 jest.mock("fs");
 
 describe("CircularArray", () => {
-    let cArray: CircularArray;
     const filePath = "test/";
     const fileName = "test.txt";
     const fileContent = "0\n5\n10\n20\n30\n40\n50";
