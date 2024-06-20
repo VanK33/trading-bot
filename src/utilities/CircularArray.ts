@@ -19,7 +19,6 @@ export class CircularArray {
         this.start = start;
         this.count = count;
 
-        // TODO: 需要测试一下数据循环是否正常的加载后, 会不会出现数据不对的情况 - 比如Add的时候, 是否从start开始
         for (let i = 0; i < count; i++) {
             this.arr[i] = data[i];
         }
@@ -37,7 +36,6 @@ export class CircularArray {
 
 
     calculateSMA(): number {
-        if (this.count === 0) return 0;
         let sum = 0;
         for (let i = 0; i < this.count; i++) {
             sum += this.arr[(this.start + i) % this.capacity];
